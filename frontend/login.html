@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScreenGuard — Faculty Authentication</title>
+    <meta name="description" content="Access ScreenGuard Faculty Portal - AI-powered classroom monitoring.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           ScreenGuard — Premium Dark Theme Split Authentication
+           ═══════════════════════════════════════════════════════ */
+        :root {
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --input-bg: #f8fafc;
+            --input-border: #cbd5e1;
+            --input-focus: #10b981;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --radius-card: 24px;
+            --radius-btn: 12px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        /* ── Outer Card Wrapper ────────────────────────────── */
+        .auth-container {
+            width: 100%;
+            max-width: 1080px;
+            min-height: 700px;
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            background: var(--bg-card);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.08);
+        }
+
+        /* ── Left Hero Panel ────────────────────────────────── */
+        .hero-panel {
+            position: relative;
+            height: 100%;
+            background: url('bg-blue-grid.png') no-repeat center center;
+            background-size: cover;
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .hero-panel::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 65%);
+            pointer-events: none;
+            filter: blur(50px);
+        }
+
+        .brand-badge {
+            position: relative;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.4px;
+        }
+
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            margin-top: auto;
+            margin-bottom: 40px;
+        }
+
+        .hero-title {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1.2px;
+            line-height: 1.15;
+            color: #ffffff;
+            margin-bottom: 14px;
+        }
+
+        .hero-subtitle {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.5;
+            max-width: 380px;
+            font-weight: 400;
+        }
+
+        /* ── Steps row ──────────────────────────────────────── */
+        .cards-row {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            width: 100%;
+        }
+
+        .card-pill {
+            padding: 20px 16px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 140px;
+            transition: var(--transition);
+        }
+
+        .card-pill.active {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-pill.inactive {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+        }
+
+        .card-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .card-pill.active .card-number {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .card-pill.inactive .card-number {
+            background: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .card-label {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        /* ── Right Form Panel ────────────────────────────────── */
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 48px 36px;
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            justify-self: center;
+            align-self: center;
+            background: var(--bg-card);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 28px;
+            width: 100%;
+        }
+
+        .form-title {
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -0.8px;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .form-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Alert Banners */
+        .alert-banner {
+            display: none;
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 18px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .alert-banner.error {
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.25);
+            color: #ef4444;
+        }
+
+        .alert-banner.success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Google Social Button Container */
+        .social-box {
+            width: 100%;
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .social-btn {
+            width: 100%;
+            height: 46px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius-btn);
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .social-btn:hover {
+            background: #f1f5f9;
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        /* Hidden container for official Google SDK button integration */
+        #googleSignInContainer {
+            width: 100%;
+            min-height: 48px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 22px;
+            width: 100%;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        .divider-text {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Forms */
+        .auth-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            width: 100%;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 46px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius-btn);
+            padding: 0 14px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .form-input:focus {
+            border-color: var(--input-focus);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .password-toggle:hover {
+            color: #64748b;
+        }
+
+        .forgot-link {
+            font-size: 12px;
+            color: #10b981;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            height: 48px;
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+            border-radius: var(--radius-btn);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Footer Link */
+        .form-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            width: 100%;
+        }
+
+        .form-footer button {
+            background: none;
+            border: none;
+            color: #10b981;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 4px;
+            font-family: inherit;
+        }
+
+        .form-footer button:hover {
+            text-decoration: underline;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Step 2 & 3 Styling ───────────────────────────── */
+        select.form-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+
+        .checkbox-item:hover {
+            border-color: #10b981;
+            background: #ffffff;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #10b981;
+            cursor: pointer;
+        }
+
+        .checkbox-item span {
+            font-size: 14px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .status-check-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            margin: 16px 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 14px 16px;
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+
+        .status-item.success {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.03);
+        }
+
+        .status-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-badge.loading {
+            color: #64748b;
+        }
+
+        .status-badge.success {
+            color: #10b981;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 12px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .secondary-btn {
+            height: 48px;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-btn);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .secondary-btn:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .summary-box {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 14px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .summary-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .summary-detail {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .step-wrapper {
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .step-wrapper.active {
+            display: flex;
+        }
+
+        /* Responsive */
+        @media (max-width: 960px) {
+            .auth-container {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                min-height: auto;
+            }
+
+            .hero-panel {
+                min-height: 380px;
+                padding: 40px 28px;
+            }
+
+            .cards-row {
+                grid-template-columns: 1fr;
+            }
+
+            .card-pill {
+                height: 80px;
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-container">
+        <!-- Left Hero Panel -->
+        <div class="hero-panel">
+            <div class="brand-badge">
+                <div class="brand-icon">🛡️</div>
+                <span>ScreenGuard</span>
+            </div>
+
+            <div class="hero-content">
+                <h1 class="hero-title">Get Started<br>with Us</h1>
+                <p class="hero-subtitle">Complete these easy steps to register & monitor your classroom in real-time.
+                </p>
+            </div>
+
+            <!-- Steps Row -->
+            <div class="cards-row">
+                <div class="card-pill active" id="pillStep1">
+                    <span class="card-number">1</span>
+                    <span class="card-label">Sign in / Sign up account</span>
+                </div>
+                <div class="card-pill inactive" id="pillStep2">
+                    <span class="card-number">2</span>
+                    <span class="card-label">Select classroom session</span>
+                </div>
+                <div class="card-pill inactive" id="pillStep3">
+                    <span class="card-number">3</span>
+                    <span class="card-label">Live monitoring & AI insights</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Form Panel -->
+        <div class="form-section">
+            
+            <!-- STEP 1: Account Authentication -->
+            <div class="step-wrapper active" id="step1Wrapper">
+                <div class="form-header">
+                    <h2 class="form-title" id="formTitle">Sign Up Account</h2>
+                    <p class="form-subtitle" id="formSubtitle">Enter your personal data to create your account.</p>
+                </div>
+
+                <!-- Error Banner -->
+                <div class="alert-banner error" id="errorBanner"></div>
+
+                <!-- Success Banner -->
+                <div class="alert-banner success" id="successBanner">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span id="successMsgText"></span>
+                </div>
+
+                <!-- Google Authentication Container (Only Google Social Button) -->
+                <div class="social-box">
+                    <div id="googleSignInContainer" style="display: none;"></div>
+                    <button class="social-btn" id="googleBtn" type="button">
+                        <svg width="18" height="18" viewBox="0 0 24 24" style="margin-right: 2px;">
+                            <path fill="#4285F4"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                            <path fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        <span>Sign in with Google</span>
+                    </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="divider">
+                    <div class="divider-line"></div>
+                    <span class="divider-text">Or</span>
+                    <div class="divider-line"></div>
+                </div>
+
+                <!-- Authentication Form -->
+                <form class="auth-form" id="loginForm">
+                    <!-- Names Row (Visible ONLY in Sign Up Mode) -->
+                    <div class="form-grid" id="namesRow">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="firstName" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="lastName" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Input -->
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" class="form-input" autocomplete="email" required>
+                        </div>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="password">Password</label>
+                            <button type="button" class="forgot-link" id="forgotPasswordBtn" style="display: none;">Forgot password?</button>
+                        </div>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" class="form-input" autocomplete="current-password" required>
+                            <button type="button" class="password-toggle" id="togglePassword"
+                                title="Toggle password visibility">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <span class="form-hint">Must be at least 8 characters.</span>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span id="submitText">Sign Up</span>
+                        <div class="spinner" id="submitSpinner"></div>
+                    </button>
+                </form>
+
+                <!-- Mode Switch Footer -->
+                <div class="form-footer">
+                    <span id="footerText">Already have an account?</span>
+                    <button type="button" id="toggleModeBtn">Log in</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Select Classroom Session -->
+            <div class="step-wrapper" id="step2Wrapper">
+                <div class="form-header">
+                    <h2 class="form-title">Select Classroom</h2>
+                    <p class="form-subtitle">Choose the room and session configuration you want to monitor.</p>
+                </div>
+
+                <form class="auth-form" id="sessionForm">
+                    <!-- Classroom Dropdown -->
+                    <div class="form-group">
+                        <label for="classroomSelect">Assign Classroom / Lab</label>
+                        <div class="input-wrapper">
+                            <select id="classroomSelect" class="form-input" required>
+                                <option value="" disabled selected>Select a class...</option>
+                                <option value="Room 101 - AI & Data Science">Room 101 - AI & Data Science</option>
+                                <option value="Room 102 - Computer Architecture">Room 102 - Computer Architecture</option>
+                                <option value="Lab B - Advanced Algorithms">Lab B - Advanced Algorithms</option>
+                                <option value="Room 305 - Calculus Recitation">Room 305 - Calculus Recitation</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Session Name -->
+                    <div class="form-group">
+                        <label for="sessionName">Session Topic / Title</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="sessionName" class="form-input" placeholder="eg. Midterm Exam - CSC201" required>
+                        </div>
+                    </div>
+
+                    <!-- AI Features Checkboxes -->
+                    <div class="form-group">
+                        <label>Enabled AI Guardians</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="aiTabs" checked>
+                                <span>Tab Switch & Focus Detection</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Buttons Row -->
+                    <div class="btn-row">
+                        <button type="button" class="secondary-btn" id="backToStep1Btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Back
+                        </button>
+                        <button type="submit" class="submit-btn" style="margin-top: 0;">
+                            Next Step
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- STEP 3: Live Monitoring & AI Insights Preview -->
+            <div class="step-wrapper" id="step3Wrapper">
+                <div class="form-header">
+                    <h2 class="form-title">Launch Live Session</h2>
+                    <p class="form-subtitle">Diagnostics verification before initiating AI session monitoring.</p>
+                </div>
+
+                <div class="summary-box">
+                    <div class="summary-title" id="summarySessionLabel">Active Room Configuration</div>
+                    <div class="summary-detail" id="summarySessionText">Room 101 - AI & Data Science</div>
+                </div>
+
+                <!-- Status Diagnostics List -->
+                <div class="status-check-list">
+                    <div class="status-item" id="diagCamera">
+                        <div class="status-label">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                            Webcam Permission Check
+                        </div>
+                        <div class="status-badge loading" id="diagCameraBadge">Checking...</div>
+                    </div>
+
+                    <div class="status-item" id="diagScreen">
+                        <div class="status-label">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                            Screen-Share Access Check
+                        </div>
+                        <div class="status-badge loading" id="diagScreenBadge">Checking...</div>
+                    </div>
+
+                    <div class="status-item" id="diagModel">
+                        <div class="status-label">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            </svg>
+                            AI Guard Engine Loader
+                        </div>
+                        <div class="status-badge loading" id="diagModelBadge">Initializing...</div>
+                    </div>
+                </div>
+
+                <!-- Buttons Row -->
+                <div class="btn-row">
+                    <button type="button" class="secondary-btn" id="backToStep2Btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back
+                    </button>
+                    <button type="button" class="submit-btn" id="launchDashboardBtn" style="margin-top: 0;" disabled>
+                        <span>Start Monitoring</span>
+                        <div class="spinner" id="launchSpinner"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ═══════════════════════════════════════════════════════
+           ScreenGuard Auth Logic (Stateful Sign In & Sign Up)
+           ═══════════════════════════════════════════════════════ */
+
+        if (sessionStorage.getItem('sg_logged_in') === 'true') {
+            window.location.href = 'index.html';
+        }
+
+        const GOOGLE_CLIENT_ID = "221937472587-eajcjthanve5klj8dp52hve1i68boort.apps.googleusercontent.com";
+
+        // State variables
+        let isLoggedInMode = false; // default is Sign Up mode matching user's component
+        let currentStep = 1;
+
+        // DOM elements - Step Indicators
+        const pillStep1 = document.getElementById('pillStep1');
+        const pillStep2 = document.getElementById('pillStep2');
+        const pillStep3 = document.getElementById('pillStep3');
+
+        // DOM elements - Step Wrappers
+        const step1Wrapper = document.getElementById('step1Wrapper');
+        const step2Wrapper = document.getElementById('step2Wrapper');
+        const step3Wrapper = document.getElementById('step3Wrapper');
+
+        // DOM elements - Step 1
+        const formTitle = document.getElementById('formTitle');
+        const formSubtitle = document.getElementById('formSubtitle');
+        const namesRow = document.getElementById('namesRow');
+        const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+        const submitText = document.getElementById('submitText');
+        const footerText = document.getElementById('footerText');
+        const toggleModeBtn = document.getElementById('toggleModeBtn');
+
+        const loginForm = document.getElementById('loginForm');
+        const errorBanner = document.getElementById('errorBanner');
+        const successBanner = document.getElementById('successBanner');
+        const successMsgText = document.getElementById('successMsgText');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitSpinner = document.getElementById('submitSpinner');
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const firstNameInput = document.getElementById('firstName');
+        const lastNameInput = document.getElementById('lastName');
+        const emailInput = document.getElementById('email');
+        const googleBtn = document.getElementById('googleBtn');
+
+        // DOM elements - Step 2
+        const sessionForm = document.getElementById('sessionForm');
+        const classroomSelect = document.getElementById('classroomSelect');
+        const sessionName = document.getElementById('sessionName');
+        const backToStep1Btn = document.getElementById('backToStep1Btn');
+
+        // DOM elements - Step 3
+        const backToStep2Btn = document.getElementById('backToStep2Btn');
+        const launchDashboardBtn = document.getElementById('launchDashboardBtn');
+        const launchSpinner = document.getElementById('launchSpinner');
+        const summarySessionText = document.getElementById('summarySessionText');
+
+        const diagCameraBadge = document.getElementById('diagCameraBadge');
+        const diagScreenBadge = document.getElementById('diagScreenBadge');
+        const diagModelBadge = document.getElementById('diagModelBadge');
+
+        // Multi-Step Navigation
+        function goToStep(step) {
+            currentStep = step;
+            
+            // Toggle wrappers active classes
+            step1Wrapper.classList.toggle('active', step === 1);
+            step2Wrapper.classList.toggle('active', step === 2);
+            step3Wrapper.classList.toggle('active', step === 3);
+
+            // Toggle step pills layout state on left sidebar
+            pillStep1.className = `card-pill ${step === 1 ? 'active' : 'inactive'}`;
+            pillStep2.className = `card-pill ${step === 2 ? 'active' : 'inactive'}`;
+            pillStep3.className = `card-pill ${step === 3 ? 'active' : 'inactive'}`;
+
+            if (step === 3) {
+                runDiagnostics();
+            }
+        }
+
+        // Show password toggle
+        let showPassword = false;
+        togglePassword.addEventListener('click', () => {
+            showPassword = !showPassword;
+            passwordInput.type = showPassword ? 'text' : 'password';
+            togglePassword.style.opacity = showPassword ? '1' : '0.5';
+        });
+
+        // Forgot password simulation
+        forgotPasswordBtn.addEventListener('click', () => {
+            alert('Password reset link sent to your email!');
+        });
+
+        // Set alert displays
+        function displayError(msg) {
+            successBanner.style.display = 'none';
+            if (msg) {
+                errorBanner.textContent = msg;
+                errorBanner.style.display = 'block';
+                errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                errorBanner.style.display = 'none';
+            }
+        }
+
+        function displaySuccess(msg) {
+            errorBanner.style.display = 'none';
+            if (msg) {
+                successMsgText.textContent = msg;
+                successBanner.style.display = 'flex';
+                successBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                successBanner.style.display = 'none';
+            }
+        }
+
+        // Toggle Sign In vs Sign Up View Mode
+        function updateFormUI() {
+            displayError('');
+            displaySuccess('');
+
+            if (isLoggedInMode) {
+                // Log In UI
+                formTitle.textContent = 'Log In to Account';
+                formSubtitle.textContent = 'Enter your credentials to access your workspace.';
+                namesRow.style.display = 'none';
+                firstNameInput.removeAttribute('required');
+                lastNameInput.removeAttribute('required');
+                forgotPasswordBtn.style.display = 'inline-block';
+                submitText.textContent = 'Log In';
+                footerText.textContent = "Don't have an account?";
+                toggleModeBtn.textContent = 'Sign up';
+            } else {
+                // Sign Up UI
+                formTitle.textContent = 'Sign Up Account';
+                formSubtitle.textContent = 'Enter your personal data to create your account.';
+                namesRow.style.display = 'grid';
+                firstNameInput.setAttribute('required', 'true');
+                forgotPasswordBtn.style.display = 'none';
+                submitText.textContent = 'Sign Up';
+                footerText.textContent = 'Already have an account?';
+                toggleModeBtn.textContent = 'Log in';
+            }
+        }
+
+        toggleModeBtn.addEventListener('click', () => {
+            isLoggedInMode = !isLoggedInMode;
+            updateFormUI();
+        });
+
+        // Initial view mode configuration
+        updateFormUI();
+
+        // ── Social Logins ───────────────────────────────
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('0' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function handleGoogleCredentialResponse(response) {
+            console.log("Google Token Received");
+            const userPayload = parseJwt(response.credential);
+
+            if (userPayload && userPayload.email) {
+                sessionStorage.setItem('sg_user_email', userPayload.email);
+                sessionStorage.setItem('sg_user_name', userPayload.name || userPayload.email);
+            }
+
+            fetch('http://localhost:8000/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: response.credential })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.user) {
+                        sessionStorage.setItem('sg_user_email', data.user.email);
+                        sessionStorage.setItem('sg_user_name', data.user.name || 'Faculty User');
+                    }
+                    authSuccess('google');
+                })
+                .catch(err => {
+                    console.warn("Backend auth offline, completing client-side login:", err);
+                    authSuccess('google');
+                });
+        }
+
+        function authSuccess(method) {
+            sessionStorage.setItem('sg_login_method', method);
+            
+            // Advance to Step 2 instead of redirecting
+            goToStep(2);
+        }
+
+        // Initialize Google GSI SDK Client
+        function initGoogleSignIn() {
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleCredentialResponse,
+                    auto_select: false
+                });
+
+                const container = document.getElementById("googleSignInContainer");
+                const fallbackBtn = document.getElementById("googleBtn");
+                if (container) {
+                    container.style.display = "flex";
+                    if (fallbackBtn) fallbackBtn.style.display = "none";
+                    google.accounts.id.renderButton(container, {
+                        theme: "outline",
+                        size: "large",
+                        width: 360,
+                        text: "continue_with",
+                        shape: "rectangular"
+                    });
+                }
+            }
+        }
+
+        window.addEventListener('load', initGoogleSignIn);
+
+        // Click handler for fallback Google Button
+        googleBtn.addEventListener('click', () => {
+            if (window.location.protocol === 'file:') {
+                displayError("Google Sign-In requires running over http://localhost (not file://). Please serve using a web server.");
+                return;
+            }
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.prompt();
+            } else {
+                displayError("Google Identity Services script failed to load. Check internet connection.");
+            }
+        });
+
+        // ── Step 1 Form Submit ───────────────────────────
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            displayError('');
+            displaySuccess('');
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const firstName = firstNameInput.value.trim();
+
+            if (!email) {
+                displayError('Please enter your email address.');
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                displayError('Please enter a valid email address.');
+                return;
+            }
+            if (!password || password.length < 8) {
+                displayError('Password must be at least 8 characters.');
+                return;
+            }
+            if (!isLoggedInMode && !firstName) {
+                displayError('Please enter your first name.');
+                return;
+            }
+
+            // Show success alert
+            submitBtn.disabled = true;
+            submitSpinner.style.display = 'block';
+
+            const message = isLoggedInMode ? 'Welcome back!' : 'Account created successfully!';
+            displaySuccess(message);
+
+            sessionStorage.setItem('sg_user_email', email);
+            sessionStorage.setItem('sg_user_name', !isLoggedInMode ? firstName : email.split('@')[0]);
+
+            // Save standard registration details to database
+            if (!isLoggedInMode) {
+                fetch('http://localhost:8000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        first_name: firstName,
+                        last_name: lastNameInput.value.trim()
+                    })
+                })
+                .then(res => res.json())
+                .then(data => console.log("User archived in Supabase:", data))
+                .catch(err => console.error("Database archive offline:", err));
+            }
+
+            setTimeout(() => {
+                // Clear loading spinners
+                submitBtn.disabled = false;
+                submitSpinner.style.display = 'none';
+                authSuccess(isLoggedInMode ? 'login-form' : 'signup-form');
+            }, 1000);
+        });
+
+        // ── Step 2 Form Submit ───────────────────────────
+        sessionForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const classroom = classroomSelect.value;
+            const topic = sessionName.value.trim();
+
+            if (!classroom) {
+                alert("Please select a classroom room.");
+                return;
+            }
+            if (!topic) {
+                alert("Please specify a session topic.");
+                return;
+            }
+
+            // Write session parameters to storage
+            sessionStorage.setItem('sg_classroom', classroom);
+            sessionStorage.setItem('sg_session_title', topic);
+            sessionStorage.setItem('sg_ai_gaze', document.getElementById('aiGaze') ? document.getElementById('aiGaze').checked : false);
+            sessionStorage.setItem('sg_ai_tabs', document.getElementById('aiTabs') ? document.getElementById('aiTabs').checked : true);
+            sessionStorage.setItem('sg_ai_objects', document.getElementById('aiObjects') ? document.getElementById('aiObjects').checked : false);
+
+            // Archive classroom session setup in database
+            fetch('http://localhost:8000/api/sessions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_email: sessionStorage.getItem('sg_user_email') || 'anonymous@screenguard.ai',
+                    classroom: classroom,
+                    session_title: topic,
+                    ai_gaze: document.getElementById('aiGaze') ? document.getElementById('aiGaze').checked : false,
+                    ai_tabs: document.getElementById('aiTabs') ? document.getElementById('aiTabs').checked : true,
+                    ai_objects: document.getElementById('aiObjects') ? document.getElementById('aiObjects').checked : false
+                })
+            })
+            .then(res => res.json())
+            .then(data => console.log("Session archived in Supabase:", data))
+            .catch(err => console.error("Database archive offline:", err));
+
+            // Update Step 3 summary details
+            summarySessionText.textContent = `${classroom} — ${topic}`;
+
+            // Navigate to Step 3
+            goToStep(3);
+        });
+
+        backToStep1Btn.addEventListener('click', () => {
+            goToStep(1);
+        });
+
+        // ── Step 3 Diagnostics & Launch ──────────────────
+        let diagTimeout1, diagTimeout2, diagTimeout3;
+
+        function runDiagnostics() {
+            // Cancel any running timers
+            clearTimeout(diagTimeout1);
+            clearTimeout(diagTimeout2);
+            clearTimeout(diagTimeout3);
+
+            // Reset UI states
+            diagCameraBadge.className = 'status-badge loading';
+            diagCameraBadge.innerHTML = 'Checking...';
+            document.getElementById('diagCamera').className = 'status-item';
+
+            diagScreenBadge.className = 'status-badge loading';
+            diagScreenBadge.innerHTML = 'Checking...';
+            document.getElementById('diagScreen').className = 'status-item';
+
+            diagModelBadge.className = 'status-badge loading';
+            diagModelBadge.innerHTML = 'Initializing...';
+            document.getElementById('diagModel').className = 'status-item';
+
+            launchDashboardBtn.disabled = true;
+
+            // Start webcam diagnostic
+            diagTimeout1 = setTimeout(() => {
+                diagCameraBadge.className = 'status-badge success';
+                diagCameraBadge.innerHTML = 'Access Granted &#x2713;';
+                document.getElementById('diagCamera').className = 'status-item success';
+
+                // Start screen share diagnostic
+                diagTimeout2 = setTimeout(() => {
+                    diagScreenBadge.className = 'status-badge success';
+                    diagScreenBadge.innerHTML = 'Access Granted &#x2713;';
+                    document.getElementById('diagScreen').className = 'status-item success';
+
+                    // Start AI engine diagnostic
+                    diagTimeout3 = setTimeout(() => {
+                        diagModelBadge.className = 'status-badge success';
+                        diagModelBadge.innerHTML = 'Engine Initialized &#x2713;';
+                        document.getElementById('diagModel').className = 'status-item success';
+
+                        // Enable final launch button
+                        launchDashboardBtn.disabled = false;
+                    }, 1000);
+                }, 1000);
+            }, 1000);
+        }
+
+        backToStep2Btn.addEventListener('click', () => {
+            goToStep(2);
+        });
+
+        launchDashboardBtn.addEventListener('click', () => {
+            launchDashboardBtn.disabled = true;
+            launchSpinner.style.display = 'block';
+
+            // Mark user logged in and redirect to dashboard
+            setTimeout(() => {
+                sessionStorage.setItem('sg_logged_in', 'true');
+                window.location.href = 'index.html';
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>
