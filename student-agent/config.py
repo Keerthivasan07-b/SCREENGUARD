@@ -11,7 +11,7 @@ class AgentConfig:
     student_id: str = "PC01"
     student_name: str = "Student 1"
     auth_token: str = "student-secret"
-    fps: float = 30.0
+    fps: float = 1.0
     target_width: int = 480
     jpeg_quality: int = 60
     monitor_interval: float = 1.5
