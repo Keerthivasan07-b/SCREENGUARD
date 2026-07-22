@@ -84,17 +84,20 @@
         </aside>
     </main>
 
-    <!-- Fullscreen Overlay -->
+    <!-- Popout Overlay (Multi-Screen Parallel View) -->
     <div class="fullscreen-overlay" id="fullscreenOverlay">
         <div class="fullscreen-header">
             <div class="fullscreen-info">
-                <span class="fullscreen-student-name" id="fullscreenStudentName"></span>
-                <span class="fullscreen-student-id" id="fullscreenStudentId"></span>
+                <span class="fullscreen-title">🚨 Pop-Out Live Monitor</span>
+                <span class="popout-count-badge" id="popoutCountBadge">0 Active Screens</span>
             </div>
-            <button class="fullscreen-close" id="fullscreenClose">✕</button>
+            <div class="fullscreen-actions">
+                <button class="clear-btn" id="popoutCloseAll" style="margin-right: 12px; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: #fff;">Close All</button>
+                <button class="fullscreen-close" id="fullscreenClose" title="Close Overlay">✕</button>
+            </div>
         </div>
-        <div class="fullscreen-content">
-            <img id="fullscreenImage" alt="Student Screen">
+        <div class="popout-content" id="popoutContainer">
+            <!-- Dynamic parallel popout cards rendered here -->
         </div>
     </div>
 
