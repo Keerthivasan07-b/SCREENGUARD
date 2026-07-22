@@ -7,7 +7,7 @@ from typing import List
 
 @dataclass
 class AgentConfig:
-    backend_url: str = "ws://10.131.131.188:8000/ws"
+    backend_url: str = "ws://10.20.17.217:8000/ws"
     student_id: str = "PC01"
     student_name: str = "Student 1"
     auth_token: str = "student-secret"
