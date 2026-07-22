@@ -1,0 +1,5 @@
+mss>=9.0.1
+opencv-python>=4.8.0
+psutil>=5.9.0
+websockets>=11.0
+pywin32>=306; sys_platform == 'win32'
