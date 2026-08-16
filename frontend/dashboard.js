@@ -10,7 +10,7 @@ class ScreenGuardDashboard {
         this.students = {};        // { studentId: { name, status, lastFrame, lastSeen, fps } }
         this.alerts = [];
         this.alertCount = 0;
-        this.fullscreenStudentId = null;
+        this.activePopouts = new Map(); // Maps studentId -> { isAlert, reason, detail }
         this.fpsTrackers = {};     // { studentId: { frames: 0, lastCheck: timestamp } }
         this.alertAudio = null;
         this.alertedStudents = new Set();
@@ -28,9 +28,9 @@ class ScreenGuardDashboard {
             searchInput: document.getElementById('searchInput'),
             gridSize: document.getElementById('gridSize'),
             fullscreenOverlay: document.getElementById('fullscreenOverlay'),
-            fullscreenImage: document.getElementById('fullscreenImage'),
-            fullscreenStudentName: document.getElementById('fullscreenStudentName'),
-            fullscreenStudentId: document.getElementById('fullscreenStudentId'),
+            popoutContainer: document.getElementById('popoutContainer'),
+            popoutCountBadge: document.getElementById('popoutCountBadge'),
+            popoutCloseAll: document.getElementById('popoutCloseAll'),
             fullscreenClose: document.getElementById('fullscreenClose'),
             clearAlerts: document.getElementById('clearAlerts'),
             settingsOverlay: document.getElementById('settingsOverlay'),
@@ -88,13 +88,18 @@ class ScreenGuardDashboard {
             this.filterStudents(e.target.value.toLowerCase());
         });
 
-        // Fullscreen close
-        this.dom.fullscreenClose.addEventListener('click', () => this.closeFullscreen());
+        // Popout overlay controls
+        if (this.dom.fullscreenClose) {
+            this.dom.fullscreenClose.addEventListener('click', () => this.closeAllPopouts());
+        }
+        if (this.dom.popoutCloseAll) {
+            this.dom.popoutCloseAll.addEventListener('click', () => this.closeAllPopouts());
+        }
         this.dom.fullscreenOverlay.addEventListener('click', (e) => {
-            if (e.target === this.dom.fullscreenOverlay) this.closeFullscreen();
+            if (e.target === this.dom.fullscreenOverlay) this.closeAllPopouts();
         });
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') this.closeFullscreen();
+            if (e.key === 'Escape') this.closeAllPopouts();
         });
 
         // Clear alerts
@@ -111,6 +116,8 @@ class ScreenGuardDashboard {
                 const badge = card.querySelector('.alert-badge');
                 if (badge) badge.remove();
             });
+            // Automatically close all alert screen popouts
+            this.closeAllPopouts();
         });
 
         // FPS calculator interval
@@ -211,9 +218,20 @@ class ScreenGuardDashboard {
             case 'alert':
                 this.handleAlert(data);
                 break;
+            case 'clear_alert':
+                this.handleClearAlert(data);
+                break;
             default:
                 console.log('[ScreenGuard] Unknown message type:', data.type);
         }
+    }
+
+    // ── Device Role Filter ──────────────────────────────
+    isFacultyDevice(studentId, studentName = '') {
+        const lowerId = (studentId || '').toLowerCase();
+        const lowerName = (studentName || '').toLowerCase();
+        const keywords = ['faculty', 'teacher', 'instructor', 'professor', 'admin', 'host'];
+        return keywords.some(k => lowerId.includes(k) || lowerName.includes(k));
     }
 
     // ── Roster Update ───────────────────────────────────
@@ -221,6 +239,9 @@ class ScreenGuardDashboard {
         const incomingIds = new Set();
 
         (data.students || []).forEach(s => {
+            // Exclude faculty or host machines from student roster
+            if (this.isFacultyDevice(s.studentId, s.studentName)) return;
+
             incomingIds.add(s.studentId);
             if (!this.students[s.studentId]) {
                 this.students[s.studentId] = {
@@ -244,7 +265,7 @@ class ScreenGuardDashboard {
     // ── Frame Update ────────────────────────────────────
     handleFrame(data) {
         const studentId = data.studentId;
-        if (!studentId) return;
+        if (!studentId || this.isFacultyDevice(studentId)) return;
 
         // Auto-create student entry if roster hasn't arrived yet
         if (!this.students[studentId]) {
@@ -269,7 +290,7 @@ class ScreenGuardDashboard {
         this.students[studentId].lastSeen = Date.now();
         this.students[studentId].status = 'online';
 
-        // Update card image
+        // Update grid card image
         const card = document.getElementById(`card-${studentId}`);
         if (card) {
             const img = card.querySelector('.card-screen img');
@@ -282,9 +303,12 @@ class ScreenGuardDashboard {
             this.updateStudentCardStatus(studentId);
         }
 
-        // Update fullscreen if viewing this student
-        if (this.fullscreenStudentId === studentId && data.data) {
-            this.dom.fullscreenImage.src = `data:image/jpeg;base64,${data.data}`;
+        // Update parallel pop-out screen image if active in popout modal
+        if (this.activePopouts.has(studentId) && data.data) {
+            const popoutImg = document.getElementById(`popout-img-${studentId}`);
+            if (popoutImg) {
+                popoutImg.src = `data:image/jpeg;base64,${data.data}`;
+            }
         }
 
         this.dom.studentCount.textContent = Object.keys(this.students).length;
@@ -292,6 +316,8 @@ class ScreenGuardDashboard {
 
     // ── Alert Handler ───────────────────────────────────
     handleAlert(data) {
+        if (this.isFacultyDevice(data.studentId, data.studentName)) return;
+
         this.alertCount++;
         this.dom.alertCount.textContent = this.alertCount;
 
@@ -316,8 +342,26 @@ class ScreenGuardDashboard {
         // Play alarm sound
         this.playAlertSound();
 
-        // Auto-expand to fullscreen
-        this.openFullscreen(data.studentId, true);
+        // Pop out screen side-by-side (parallel view for multi-alerts)
+        this.openPopout(data.studentId, true, alertItem);
+    }
+
+    // ── Clear Alert Handler (Pop In) ──────────────────────
+    handleClearAlert(data) {
+        const studentId = data.studentId;
+        if (!studentId) return;
+
+        // Instantly pop in / remove the popout screen modal for this student
+        this.removePopout(studentId);
+
+        // Remove red alert highlight & badge from student grid card
+        const card = document.getElementById(`card-${studentId}`);
+        if (card) {
+            card.classList.remove('alert-active');
+            const badge = card.querySelector('.alert-badge');
+            if (badge) badge.remove();
+        }
+        this.alertedStudents.delete(studentId);
     }
 
     // ── UI: Create Student Card ─────────────────────────
@@ -347,7 +391,7 @@ class ScreenGuardDashboard {
             </div>
         `;
 
-        card.addEventListener('click', () => this.openFullscreen(studentId, false));
+        card.addEventListener('click', () => this.openPopout(studentId, false));
         this.dom.studentGrid.appendChild(card);
     }
 
@@ -415,7 +459,7 @@ class ScreenGuardDashboard {
             <span class="alert-severity ${alert.severity === 'medium' ? 'medium' : ''}">${alert.severity}</span>
         `;
 
-        el.addEventListener('click', () => this.openFullscreen(alert.studentId, true));
+        el.addEventListener('click', () => this.openPopout(alert.studentId, true, alert));
 
         // Insert at top
         this.dom.alertsList.insertBefore(el, this.dom.alertsList.firstChild);
@@ -426,32 +470,132 @@ class ScreenGuardDashboard {
         }
     }
 
-    // ── Fullscreen View ─────────────────────────────────
-    openFullscreen(studentId, isAlert) {
+    // ── Parallel Pop-out Screen View ──────────────────────────────
+    openPopout(studentId, isAlert = false, alertDetails = null) {
+        if (this.isFacultyDevice(studentId)) return;
         const student = this.students[studentId];
         if (!student) return;
 
-        this.fullscreenStudentId = studentId;
-        this.dom.fullscreenStudentName.textContent = student.name;
-        this.dom.fullscreenStudentId.textContent = studentId;
+        // Clear existing auto-dismiss timer for this student if any
+        const existing = this.activePopouts.get(studentId);
+        if (existing && existing.timerId) {
+            clearTimeout(existing.timerId);
+        }
 
-        if (student.lastFrame) {
-            this.dom.fullscreenImage.src = `data:image/jpeg;base64,${student.lastFrame}`;
+        let timerId = null;
+        if (isAlert) {
+            // Auto-dismiss alert popout screen after 15 seconds if no new alerts arrive
+            timerId = setTimeout(() => {
+                const popInfo = this.activePopouts.get(studentId);
+                if (popInfo && popInfo.isAlert) {
+                    this.removePopout(studentId);
+                }
+            }, 15000);
+        }
+
+        this.activePopouts.set(studentId, {
+            isAlert: isAlert,
+            reason: alertDetails?.reason || (isAlert ? 'Alert Triggered' : 'Live Monitor'),
+            detail: alertDetails?.detail || '',
+            timerId: timerId
+        });
+
+        this.renderPopouts();
+    }
+
+    removePopout(studentId) {
+        const existing = this.activePopouts.get(studentId);
+        if (existing && existing.timerId) {
+            clearTimeout(existing.timerId);
+        }
+        this.activePopouts.delete(studentId);
+        if (this.activePopouts.size === 0) {
+            this.closeAllPopouts();
         } else {
-            this.dom.fullscreenImage.src = '';
+            this.renderPopouts();
+        }
+    }
+
+    closeAllPopouts() {
+        this.activePopouts.forEach(info => {
+            if (info.timerId) clearTimeout(info.timerId);
+        });
+        this.activePopouts.clear();
+        this.dom.fullscreenOverlay.classList.remove('active', 'alert-fullscreen');
+        if (this.dom.popoutContainer) {
+            this.dom.popoutContainer.innerHTML = '';
+        }
+        if (this.dom.popoutCountBadge) {
+            this.dom.popoutCountBadge.textContent = '0 Active Screens';
+        }
+    }
+
+    renderPopouts() {
+        const count = this.activePopouts.size;
+        if (count === 0) {
+            this.closeAllPopouts();
+            return;
         }
 
         this.dom.fullscreenOverlay.classList.add('active');
-        if (isAlert) {
+        if (this.dom.popoutCountBadge) {
+            this.dom.popoutCountBadge.textContent = `${count} Active Screen${count > 1 ? 's' : ''}`;
+        }
+
+        // Dynamic parallel layout class
+        this.dom.popoutContainer.className = 'popout-content';
+        if (count === 1) {
+            this.dom.popoutContainer.classList.add('single-card');
+        } else if (count === 2) {
+            this.dom.popoutContainer.classList.add('two-cards');
+        }
+
+        // Render each popout card
+        this.dom.popoutContainer.innerHTML = '';
+        let hasAnyAlert = false;
+
+        this.activePopouts.forEach((info, sid) => {
+            const student = this.students[sid];
+            if (!student) return;
+            if (info.isAlert) hasAnyAlert = true;
+
+            const cardEl = document.createElement('div');
+            cardEl.className = `popout-card ${info.isAlert ? 'is-alert' : ''}`;
+            cardEl.id = `popout-card-${sid}`;
+
+            const imgSrc = student.lastFrame ? `data:image/jpeg;base64,${student.lastFrame}` : '';
+
+            cardEl.innerHTML = `
+                <div class="popout-card-header">
+                    <div class="popout-card-title">
+                        <span class="popout-card-name">${student.name}</span>
+                        <span class="popout-card-id">${sid}</span>
+                    </div>
+                    <button class="popout-card-close" title="Close screen">✕</button>
+                </div>
+                <div class="popout-card-body">
+                    <img id="popout-img-${sid}" src="${imgSrc}" alt="${student.name} Screen">
+                </div>
+                ${info.isAlert ? `
+                <div class="popout-card-footer">
+                    <span class="popout-reason">⚠️ ${info.reason}</span>
+                    <span>${info.detail}</span>
+                </div>` : ''}
+            `;
+
+            cardEl.querySelector('.popout-card-close').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.removePopout(sid);
+            });
+
+            this.dom.popoutContainer.appendChild(cardEl);
+        });
+
+        if (hasAnyAlert) {
             this.dom.fullscreenOverlay.classList.add('alert-fullscreen');
         } else {
             this.dom.fullscreenOverlay.classList.remove('alert-fullscreen');
         }
-    }
-
-    closeFullscreen() {
-        this.fullscreenStudentId = null;
-        this.dom.fullscreenOverlay.classList.remove('active', 'alert-fullscreen');
     }
 
     // ── Search / Filter ─────────────────────────────────

@@ -53,7 +53,10 @@ class WebSocketSender:
             except (websockets.WebSocketException, OSError) as e:
                 self.connected = False
                 self.ws = None
-                logger.warning(f"Connection failed: {e}. Retrying in {retry_delay:.1f}s...")
+                logger.warning(
+                    f"Connection failed: {e}. Retrying in {retry_delay:.1f}s... "
+                    f"(Ensure backend is running at {self.config.backend_url})"
+                )
                 await asyncio.sleep(retry_delay)
                 retry_delay = min(retry_delay * 1.5, max_retry_delay)
             except Exception as e:

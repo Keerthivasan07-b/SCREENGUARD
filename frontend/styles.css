@@ -99,6 +99,7 @@ body {
     font-weight: 800;
     background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
 }
@@ -626,8 +627,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
-    background: rgba(0, 0, 0, 0.5);
+    padding: 14px 24px;
+    background: rgba(13, 17, 23, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .fullscreen-info {
@@ -636,53 +638,164 @@ body {
     gap: 12px;
 }
 
-.fullscreen-student-name {
-    font-size: 18px;
+.fullscreen-title {
+    font-size: 16px;
     font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.fullscreen-student-id {
-    font-size: 13px;
-    color: var(--text-muted);
-    padding: 2px 10px;
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 4px;
+.popout-count-badge {
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent-red);
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.fullscreen-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .fullscreen-close {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border: none;
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
-    font-size: 18px;
+    font-size: 16px;
     border-radius: 50%;
     cursor: pointer;
     transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .fullscreen-close:hover {
     background: var(--accent-red);
+    color: white;
 }
 
-.fullscreen-content {
+.popout-content {
     flex: 1;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 20px;
+    overflow-y: auto;
+    align-content: center;
+    justify-content: center;
+}
+
+/* 1 screen popout layout - expanded presentation */
+.popout-content.single-card {
+    grid-template-columns: minmax(300px, 900px);
+}
+
+/* 2 screens popout layout - 50/50 side by side */
+.popout-content.two-cards {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.popout-card {
+    background: #161b22;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    transition: all var(--transition-fast);
+    max-height: 80vh;
+}
+
+.popout-card.is-alert {
+    border-color: var(--accent-red);
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+    animation: alert-pulse 2s infinite;
+}
+
+.popout-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popout-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.popout-card-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.popout-card-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.popout-card-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.popout-card-close:hover {
+    color: var(--accent-red);
+}
+
+.popout-card-body {
+    flex: 1;
+    background: #0d1117;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    overflow: hidden;
+    min-height: 240px;
+    position: relative;
 }
 
-.fullscreen-content img {
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+.popout-card-body img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
-.fullscreen-overlay.alert-fullscreen .fullscreen-content img {
-    border: 4px solid var(--accent-red);
-    box-shadow: 0 0 40px rgba(239, 68, 68, 0.4);
+.popout-card-footer {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.4);
+    font-size: 12px;
+    color: var(--accent-red);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.popout-reason {
+    font-weight: 600;
 }
 
 /* ══════════════════════════════════════════════════════════
