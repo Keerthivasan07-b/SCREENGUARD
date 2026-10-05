@@ -9,12 +9,28 @@ try:
     from backend.student_manager import student_manager
     from backend.alerts import alert_engine
     from backend.supabase_db import supabase_db
+    from backend.models import (
+        RegisterMessage,
+        FrameMessage,
+        AlertMessage,
+        PingMessage,
+        StudentStatus,
+        RosterMessage,
+    )
 except ModuleNotFoundError:
     from config import config
     from websocket import handle_websocket
     from student_manager import student_manager
     from alerts import alert_engine
     from supabase_db import supabase_db
+    from models import (
+        RegisterMessage,
+        FrameMessage,
+        AlertMessage,
+        PingMessage,
+        StudentStatus,
+        RosterMessage,
+    )
 
 
 # Configure logging format
@@ -73,6 +89,19 @@ async def health_check():
         "service": "SmartClassMonitor Backend",
         "connected_students": len(student_manager.student_sockets),
         "connected_faculty": len(student_manager.faculty_sockets)
+    }
+
+@app.get("/models")
+async def get_models():
+    return {
+        "models": {
+            "register": RegisterMessage.model_json_schema(),
+            "frame": FrameMessage.model_json_schema(),
+            "alert": AlertMessage.model_json_schema(),
+            "ping": PingMessage.model_json_schema(),
+            "studentStatus": StudentStatus.model_json_schema(),
+            "roster": RosterMessage.model_json_schema(),
+        }
     }
 
 @app.get("/api/auth/config")
@@ -169,4 +198,3 @@ async def websocket_endpoint(websocket: WebSocket):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=config.HOST, port=config.PORT)
-
